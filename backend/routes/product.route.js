@@ -1,0 +1,70 @@
+import express from "express";
+// import { connectDb } from "./config/db";
+import Product from "../models/product.model.js"
+import mongoose from "mongoose";
+
+const router = express.Router();
+router.use(express.static())
+
+router.get("/", async (req, res) => {
+    // res.send("Hello World!");
+    try{
+        const products= await Product.find({});
+        res.status(200).json({sucess: true, data: products});
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({sucess: false, message: "server error"});
+    }
+});
+
+router.post("/", async (req, res) => {
+    const product = req.body;
+    if (!product.name || !product.price || !product.image){
+        return res.status(400).json({sucess: false, message: "please provides all fields"});
+    }
+    const newProduct = new Product(product)
+    try{
+        await newProduct.save();
+        res.status(201).json({sucess: true, data: newProduct});
+    }
+    catch (error){
+        console.error("error in create product:", error.message)
+        res.status(500).json({sucess: false, message: "server error"});
+    }
+});
+
+router.put("/:id", async (req, res) => {
+    const id = req.params.id;
+    const product = req.body;
+    if(!mongoose.Types.ObjectId.isValid(id)){
+        return res.status(404).json({success: false, message: "Invalid product id"});
+    }
+    
+    try {
+        const updatedProduct = await Product.findByIdAndUpdate(id, product, {new: true});
+        if (!updatedProduct) {
+            return res.status(404).json({success: false, message: "Product not found"});
+        }
+        res.status(200).json({success: true, data: updatedProduct});
+    }
+    catch (error) {
+        console.error("Error in update product:", error.message);
+        res.status(500).json({success: false, message: "Server error"});
+    }
+});
+
+router.delete("/:id", async (req, res) => {
+    const id = req.params.id;
+    console.log("id:", id )
+    try {
+        await Product.findByIdAndDelete(id);
+        res.status(200).json({sucess: true, message: "product deleted"});
+    }
+    catch (error){
+        console.error("error in delete product:", error.message);
+        res.status(500).json({sucess: false, message: "server error"});
+    }
+})
+
+export default router;
