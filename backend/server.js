@@ -1,26 +1,30 @@
-import path from "path";
-import route from "./routes/product.route.js"
-import { connectDb } from "./config/db.js";
+import express from "express";
 import dotenv from "dotenv";
-import express from 'express';
-// const exprees = require('express');
+import path from "path";
 
-// const express = require('express');
-// const app = express();
-// const port = 3000;
-// app.listen(port, () => {
-    //     console.log(`Server is running on port ${port}`
-    //     );
-    // });
+import { connectDb } from "./config/db.js";
+
+import productRoutes from "./routes/product.route.js";
 
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+const PORT = process.env.PORT || 5000;
 
-app.use("/api/product", route);
+const __dirname = path.resolve();
 
-app.listen(5000, () =>{
-    connectDb();
-    console.log('Server is running on port 5000/products');
+app.use(express.json()); // for accepting json data in req.body
+
+app.use("/api/products", productRoutes);
+
+if (process.env.NODE_ENV === "production") {
+	app.use(express.static(path.join(__dirname, "/frontend/dist")));
+	app.get("*", (req, res) => {
+		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+	});
+}
+
+app.listen(PORT, () => {
+	connectDb();
+	console.log("Server running on http://localhost:" + PORT);
 });
