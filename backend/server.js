@@ -1,9 +1,18 @@
 import path from "path";
 import Product from "./models/product.model.js"
+import mongoose from "mongoose";
 import { connectDb } from "./config/db.js";
 import dotenv from "dotenv";
 import express from 'express';
 // const exprees = require('express');
+
+// const express = require('express');
+// const app = express();
+// const port = 3000;
+// app.listen(port, () => {
+    //     console.log(`Server is running on port ${port}`
+    //     );
+    // });
 
 dotenv.config();
 
@@ -38,24 +47,25 @@ app.post("/api/products", async (req, res) => {
     }
 });
 
-app.put("/api/products", async (req, res) => {
+app.put("/api/products/:id", async (req, res) => {
     const id = req.params.id;
     const product = req.body;
     if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(404).json({sucess: false, message: "invalid product id"});
+        return res.status(404).json({success: false, message: "Invalid product id"});
     }
     
-    try{
+    try {
         const updatedProduct = await Product.findByIdAndUpdate(id, product, {new: true});
-        res.status(200).json({sucess: true, data: updatedProduct});
-
+        if (!updatedProduct) {
+            return res.status(404).json({success: false, message: "Product not found"});
+        }
+        res.status(200).json({success: true, data: updatedProduct});
     }
     catch (error) {
-        console.error("error in update product:", error.message)
-        res.status(500).json({sucess: false, message: "server error"});
-    
+        console.error("Error in update product:", error.message);
+        res.status(500).json({success: false, message: "Server error"});
     }
-})
+});
 
 app.delete("/api/products/:id", async (req, res) => {
     const id = req.params.id;
